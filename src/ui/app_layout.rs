@@ -286,12 +286,49 @@ fn render_diff_view(frame: &mut Frame, app: &mut App, area: Rect) {
     }
 
     // Apply scroll offset
+    let scroll_x = app.diff_state.scroll_x;
     let visible_lines: Vec<Line> = lines
         .into_iter()
         .skip(app.diff_state.scroll_offset)
         .take(inner.height as usize)
+        .map(|line| apply_horizontal_scroll(line, scroll_x))
         .collect();
 
     let diff = Paragraph::new(visible_lines);
     frame.render_widget(diff, inner);
+}
+
+/// Apply horizontal scroll to a line while preserving the first span (cursor indicator)
+fn apply_horizontal_scroll(line: Line, scroll_x: usize) -> Line {
+    if scroll_x == 0 || line.spans.is_empty() {
+        return line;
+    }
+
+    let mut spans: Vec<Span> = line.spans.into_iter().collect();
+
+    // Preserve the first span (indicator)
+    let indicator = spans.remove(0);
+
+    // Skip scroll_x characters from the remaining spans
+    let mut chars_to_skip = scroll_x;
+    let mut new_spans = vec![indicator];
+
+    for span in spans {
+        let content = span.content.to_string();
+        let char_count = content.chars().count();
+        if chars_to_skip >= char_count {
+            chars_to_skip -= char_count;
+            // Skip this span entirely
+        } else if chars_to_skip > 0 {
+            // Partially skip this span
+            let new_content: String = content.chars().skip(chars_to_skip).collect();
+            chars_to_skip = 0;
+            new_spans.push(Span::styled(new_content, span.style));
+        } else {
+            // Keep this span as-is
+            new_spans.push(Span::styled(content, span.style));
+        }
+    }
+
+    Line::from(new_spans)
 }

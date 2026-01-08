@@ -18,10 +18,10 @@ pub enum Action {
     NextHunk,
     PrevHunk,
     PendingZCommand,
+    ScrollLeft(usize),
+    ScrollRight(usize),
 
     // Panel focus
-    FocusFileList,
-    FocusDiff,
     ToggleFocus,
     SelectFile,
 
@@ -86,9 +86,11 @@ fn map_normal_mode(key: KeyEvent) -> Action {
 
         // Panel focus
         (KeyCode::Tab, KeyModifiers::NONE) => Action::ToggleFocus,
-        (KeyCode::Char('h') | KeyCode::Left, KeyModifiers::NONE) => Action::FocusFileList,
-        (KeyCode::Char('l') | KeyCode::Right, KeyModifiers::NONE) => Action::FocusDiff,
         (KeyCode::Enter, KeyModifiers::NONE) => Action::SelectFile,
+
+        // Horizontal scrolling
+        (KeyCode::Char('h') | KeyCode::Left, KeyModifiers::NONE) => Action::ScrollLeft(4),
+        (KeyCode::Char('l') | KeyCode::Right, KeyModifiers::NONE) => Action::ScrollRight(4),
 
         // Review actions
         (KeyCode::Char('r'), KeyModifiers::NONE) => Action::ToggleReviewed,

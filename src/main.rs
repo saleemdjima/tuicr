@@ -90,6 +90,8 @@ fn main() -> anyhow::Result<()> {
                     Action::HalfPageUp => app.scroll_up(15),
                     Action::PageDown => app.scroll_down(30),
                     Action::PageUp => app.scroll_up(30),
+                    Action::ScrollLeft(n) => app.scroll_left(n),
+                    Action::ScrollRight(n) => app.scroll_right(n),
                     Action::PendingZCommand => {
                         pending_z = true;
                     }
@@ -108,12 +110,6 @@ fn main() -> anyhow::Result<()> {
                             app::FocusedPanel::FileList => app::FocusedPanel::Diff,
                             app::FocusedPanel::Diff => app::FocusedPanel::FileList,
                         };
-                    }
-                    Action::FocusFileList => {
-                        app.focused_panel = app::FocusedPanel::FileList;
-                    }
-                    Action::FocusDiff => {
-                        app.focused_panel = app::FocusedPanel::Diff;
                     }
                     Action::SelectFile => {
                         if app.focused_panel == app::FocusedPanel::FileList {

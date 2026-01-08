@@ -55,6 +55,7 @@ pub struct FileListState {
 #[derive(Debug, Default)]
 pub struct DiffState {
     pub scroll_offset: usize,
+    pub scroll_x: usize,    // Horizontal scroll offset
     pub cursor_line: usize, // Absolute position in the line list
     pub current_file_idx: usize,
     pub viewport_height: usize, // Set during render
@@ -159,6 +160,14 @@ impl App {
         self.diff_state.scroll_offset = self.diff_state.scroll_offset.saturating_sub(lines);
         self.ensure_cursor_visible();
         self.update_current_file_from_cursor();
+    }
+
+    pub fn scroll_left(&mut self, cols: usize) {
+        self.diff_state.scroll_x = self.diff_state.scroll_x.saturating_sub(cols);
+    }
+
+    pub fn scroll_right(&mut self, cols: usize) {
+        self.diff_state.scroll_x = self.diff_state.scroll_x.saturating_add(cols);
     }
 
     fn ensure_cursor_visible(&mut self) {
