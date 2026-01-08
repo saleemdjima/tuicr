@@ -69,7 +69,18 @@ impl App {
         // Try to load existing session, or create new one
         let mut session = match find_session_for_repo(&repo_info.root_path) {
             Ok(Some(path)) => match load_session(&path) {
-                Ok(s) => s,
+                Ok(s) => {
+                    // Delete stale session file if base commit doesn't match
+                    if s.base_commit != repo_info.head_commit {
+                        let _ = std::fs::remove_file(&path);
+                        ReviewSession::new(
+                            repo_info.root_path.clone(),
+                            repo_info.head_commit.clone(),
+                        )
+                    } else {
+                        s
+                    }
+                }
                 Err(_) => {
                     ReviewSession::new(repo_info.root_path.clone(), repo_info.head_commit.clone())
                 }
