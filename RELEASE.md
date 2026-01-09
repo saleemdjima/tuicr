@@ -1,0 +1,54 @@
+# Release Process
+
+This project uses an automated release workflow via GitHub Actions.
+
+## How to Release
+
+1. **Go to Actions** → **Release** → **Run workflow**
+2. **Select version bump type:**
+   - `patch` (0.1.0 → 0.1.1) - bug fixes
+   - `minor` (0.1.0 → 0.2.0) - new features
+   - `major` (0.1.0 → 1.0.0) - breaking changes
+3. **Click "Run workflow"**
+4. **Review and merge** the auto-created PR
+5. **Done!** Merging automatically:
+   - Creates git tag `vX.Y.Z`
+   - Publishes to crates.io
+   - Creates GitHub Release with release notes
+
+## What Gets Updated
+
+The release PR includes:
+- `Cargo.toml` - version bump
+- `Cargo.lock` - updated lockfile
+- `CHANGELOG.md` - auto-generated from commits
+
+## Commit Message Convention
+
+For meaningful changelogs, use conventional commits:
+
+| Prefix | Category | Example |
+|--------|----------|---------|
+| `feat:` | Features | `feat: add export to JSON` |
+| `fix:` | Bug Fixes | `fix: resolve crash on empty diff` |
+| `docs:` | Documentation | `docs: update keybindings table` |
+| `perf:` | Performance | `perf: optimize large file rendering` |
+| `refactor:` | Refactor | `refactor: simplify state machine` |
+| `test:` | Testing | `test: add integration tests` |
+| `chore:` | Miscellaneous | `chore: update dependencies` |
+
+## Required Secrets
+
+The following secrets must be configured in GitHub repository settings:
+
+- `CARGO_REGISTRY_TOKEN` - API token from https://crates.io/settings/tokens
+
+## Manual Release (if needed)
+
+```bash
+# Update version in Cargo.toml manually, then:
+cargo publish --dry-run  # verify
+cargo publish            # publish to crates.io
+git tag v0.2.0
+git push origin v0.2.0
+```
