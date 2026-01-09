@@ -18,7 +18,6 @@ This project uses an automated release workflow via GitHub Actions.
    - Builds and uploads binaries for:
      - `x86_64-unknown-linux-gnu` (Linux x64)
      - `aarch64-unknown-linux-gnu` (Linux ARM64)
-     - `x86_64-apple-darwin` (macOS Intel)
      - `aarch64-apple-darwin` (macOS Apple Silicon)
      - `x86_64-pc-windows-msvc` (Windows x64)
 
