@@ -8,7 +8,12 @@ use crate::model::{LineSide, ReviewSession};
 /// (file_path, line_number, side, comment_type, content)
 type CommentEntry<'a> = (String, Option<u32>, Option<LineSide>, &'a str, &'a str);
 
-pub fn export_to_clipboard(session: &ReviewSession) -> Result<()> {
+pub fn export_to_clipboard(session: &ReviewSession) -> Result<String> {
+    // Check if there are any comments to export
+    if !session.has_comments() {
+        return Err(TuicrError::NoComments);
+    }
+
     let content = generate_markdown(session);
 
     let mut clipboard = Clipboard::new()
@@ -18,7 +23,7 @@ pub fn export_to_clipboard(session: &ReviewSession) -> Result<()> {
         .set_text(content)
         .map_err(|e| TuicrError::Clipboard(format!("Failed to copy to clipboard: {}", e)))?;
 
-    Ok(())
+    Ok("Review copied to clipboard".to_string())
 }
 
 fn generate_markdown(session: &ReviewSession) -> String {
@@ -166,5 +171,18 @@ mod tests {
         // Should have 2 numbered comments
         assert!(markdown.contains("1. **[SUGGESTION]**"));
         assert!(markdown.contains("2. **[ISSUE]**"));
+    }
+
+    #[test]
+    fn should_fail_export_when_no_comments() {
+        // given
+        let session = ReviewSession::new(PathBuf::from("/tmp/test-repo"), "abc1234def".to_string());
+
+        // when
+        let result = export_to_clipboard(&session);
+
+        // then
+        assert!(result.is_err());
+        assert!(matches!(result.unwrap_err(), TuicrError::NoComments));
     }
 }

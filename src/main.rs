@@ -248,7 +248,7 @@ fn main() -> anyhow::Result<()> {
                                     app.set_message(format!("Saved to {}", path.display()));
                                 }
                                 Err(e) => {
-                                    app.set_message(format!("Save failed: {}", e));
+                                    app.set_error(format!("Save failed: {}", e));
                                 }
                             },
                             "x" | "wq" => match save_session(&app.session) {
@@ -264,7 +264,7 @@ fn main() -> anyhow::Result<()> {
                                     }
                                 }
                                 Err(e) => {
-                                    app.set_message(format!("Save failed: {}", e));
+                                    app.set_error(format!("Save failed: {}", e));
                                 }
                             },
                             "e" | "reload" => match app.reload_diff_files() {
@@ -272,16 +272,12 @@ fn main() -> anyhow::Result<()> {
                                     app.set_message(format!("Reloaded {} files", count));
                                 }
                                 Err(e) => {
-                                    app.set_message(format!("Reload failed: {}", e));
+                                    app.set_error(format!("Reload failed: {}", e));
                                 }
                             },
                             "clip" | "export" => match export_to_clipboard(&app.session) {
-                                Ok(()) => {
-                                    app.set_message("Review copied to clipboard");
-                                }
-                                Err(e) => {
-                                    app.set_message(format!("Export failed: {}", e));
-                                }
+                                Ok(msg) => app.set_message(msg),
+                                Err(e) => app.set_warning(format!("{}", e)),
                             },
                             _ => {
                                 app.set_message(format!("Unknown command: {}", cmd));
@@ -296,12 +292,8 @@ fn main() -> anyhow::Result<()> {
                     if app.input_mode == app::InputMode::Confirm {
                         if let Some(app::ConfirmAction::CopyAndQuit) = app.pending_confirm {
                             match export_to_clipboard(&app.session) {
-                                Ok(()) => {
-                                    app.set_message("Review copied to clipboard");
-                                }
-                                Err(e) => {
-                                    app.set_message(format!("Export failed: {}", e));
-                                }
+                                Ok(msg) => app.set_message(msg),
+                                Err(e) => app.set_warning(format!("{}", e)),
                             }
                         }
                         app.exit_confirm_mode();
@@ -314,6 +306,10 @@ fn main() -> anyhow::Result<()> {
                         app.should_quit = true;
                     }
                 }
+                Action::ExportToClipboard => match export_to_clipboard(&app.session) {
+                    Ok(msg) => app.set_message(msg),
+                    Err(e) => app.set_warning(format!("{}", e)),
+                },
                 _ => {}
             }
         }
