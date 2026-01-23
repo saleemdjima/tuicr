@@ -348,9 +348,23 @@ pub fn handle_commit_select_action(app: &mut App, action: Action) {
     match action {
         Action::CommitSelectUp => app.commit_select_up(),
         Action::CommitSelectDown => app.commit_select_down(),
-        Action::ToggleCommitSelect => app.toggle_commit_selection(),
+        Action::ToggleCommitSelect => {
+            // If on expand row, expand commits instead of toggling selection
+            if app.is_on_expand_row() {
+                if let Err(e) = app.expand_commit() {
+                    app.set_error(format!("Failed to load commits: {e}"));
+                }
+            } else {
+                app.toggle_commit_selection()
+            }
+        }
         Action::ConfirmCommitSelect => {
-            if let Err(e) = app.confirm_commit_selection() {
+            // if on expand row, expand commit instead of confirming
+            if app.is_on_expand_row() {
+                if let Err(e) = app.expand_commit() {
+                    app.set_error(format!("Failed to load commits: {e}"));
+                }
+            } else if let Err(e) = app.confirm_commit_selection() {
                 app.set_error(format!("Failed to load commits: {e}"));
             }
         }
