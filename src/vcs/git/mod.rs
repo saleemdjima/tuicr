@@ -77,8 +77,8 @@ impl VcsBackend for GitBackend {
         fetch_context_lines(&self.repo, file_path, file_status, start_line, end_line)
     }
 
-    fn get_recent_commits(&self, count: usize) -> Result<Vec<CommitInfo>> {
-        let git_commits = repository::get_recent_commits(&self.repo, count)?;
+    fn get_recent_commits(&self, offset: usize, limit: usize) -> Result<Vec<CommitInfo>> {
+        let git_commits = repository::get_recent_commits(&self.repo, offset, limit)?;
         Ok(git_commits
             .into_iter()
             .map(|c| CommitInfo {

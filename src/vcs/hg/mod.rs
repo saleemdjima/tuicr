@@ -119,14 +119,24 @@ impl VcsBackend for HgBackend {
         Ok(result)
     }
 
-    fn get_recent_commits(&self, count: usize) -> Result<Vec<CommitInfo>> {
+    fn get_recent_commits(&self, offset: usize, limit: usize) -> Result<Vec<CommitInfo>> {
         // Use hg log with a template to get structured output
         // Template fields separated by \x00, records separated by \x01
+        //
+        // hg log doesn't have a --skip option, so we fetch offset+limit commits
+        // and skip the first `offset` in Rust code
+        let fetch_count = offset + limit;
         let template =
             "{node}\\x00{node|short}\\x00{desc|firstline}\\x00{author|user}\\x00{date|hgdate}\\x01";
         let output = run_hg_command(
             &self.info.root_path,
-            &["log", "-l", &count.to_string(), "--template", template],
+            &[
+                "log",
+                "-l",
+                &fetch_count.to_string(),
+                "--template",
+                template,
+            ],
         )?;
 
         let mut commits = Vec::new();
@@ -163,7 +173,7 @@ impl VcsBackend for HgBackend {
             });
         }
 
-        Ok(commits)
+        Ok(commits.into_iter().skip(offset).collect())
     }
 
     fn get_commit_range_diff(
@@ -454,7 +464,7 @@ mod tests {
             HgBackend::from_path(temp.path().to_path_buf()).expect("Failed to create hg backend");
 
         let commits = backend
-            .get_recent_commits(5)
+            .get_recent_commits(0, 5)
             .expect("Failed to get commits");
 
         assert_eq!(commits.len(), 3);
@@ -482,7 +492,7 @@ mod tests {
             HgBackend::from_path(temp.path().to_path_buf()).expect("Failed to create hg backend");
 
         let commits = backend
-            .get_recent_commits(5)
+            .get_recent_commits(0, 5)
             .expect("Failed to get commits");
         assert_eq!(commits.len(), 3);
 

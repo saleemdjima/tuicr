@@ -63,7 +63,7 @@ pub trait VcsBackend: Send {
 
     /// Get recent commits for commit selection UI.
     /// Returns empty vec if not supported (default).
-    fn get_recent_commits(&self, _count: usize) -> Result<Vec<CommitInfo>> {
+    fn get_recent_commits(&self, _offset: usize, _limit: usize) -> Result<Vec<CommitInfo>> {
         Ok(Vec::new())
     }
 

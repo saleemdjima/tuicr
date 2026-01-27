@@ -156,10 +156,14 @@ impl VcsBackend for JjBackend {
         Ok(result)
     }
 
-    fn get_recent_commits(&self, count: usize) -> Result<Vec<CommitInfo>> {
+    fn get_recent_commits(&self, offset: usize, limit: usize) -> Result<Vec<CommitInfo>> {
         // Use jj log with a template to get structured output
         // Template fields separated by \x00, records separated by \x01
         // Note: jj uses change_id for identifying changes, commit_id for the underlying git commit
+        //
+        // jj log doesn't have a --skip option, so we fetch offset+limit commits
+        // and skip the first `offset` in Rust code
+        let fetch_count = offset + limit;
         let template = r#"commit_id ++ "\x00" ++ commit_id.short() ++ "\x00" ++ description.first_line() ++ "\x00" ++ author.email() ++ "\x00" ++ committer.timestamp() ++ "\x01""#;
         let output = run_jj_command(
             &self.info.root_path,
@@ -168,7 +172,7 @@ impl VcsBackend for JjBackend {
                 "-r",
                 "::@",
                 "--limit",
-                &count.to_string(),
+                &fetch_count.to_string(),
                 "--no-graph",
                 "-T",
                 template,
@@ -206,7 +210,7 @@ impl VcsBackend for JjBackend {
             });
         }
 
-        Ok(commits)
+        Ok(commits.into_iter().skip(offset).collect())
     }
 
     fn get_commit_range_diff(
@@ -471,7 +475,7 @@ mod tests {
             JjBackend::from_path(temp.path().to_path_buf()).expect("Failed to create jj backend");
 
         let commits = backend
-            .get_recent_commits(5)
+            .get_recent_commits(0, 5)
             .expect("Failed to get commits");
 
         // jj creates a working copy commit on top, so we may have 4 commits
@@ -513,7 +517,7 @@ mod tests {
             JjBackend::from_path(temp.path().to_path_buf()).expect("Failed to create jj backend");
 
         let commits = backend
-            .get_recent_commits(10)
+            .get_recent_commits(0, 10)
             .expect("Failed to get commits");
         assert!(commits.len() >= 3, "Expected at least 3 commits");
 

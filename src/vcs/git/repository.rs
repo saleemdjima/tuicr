@@ -12,12 +12,16 @@ pub struct CommitInfo {
     pub time: DateTime<Utc>,
 }
 
-pub fn get_recent_commits(repo: &Repository, count: usize) -> Result<Vec<CommitInfo>> {
+pub fn get_recent_commits(
+    repo: &Repository,
+    offset: usize,
+    limit: usize,
+) -> Result<Vec<CommitInfo>> {
     let mut revwalk = repo.revwalk()?;
     revwalk.push_head()?;
 
     let mut commits = Vec::new();
-    for oid in revwalk.take(count) {
+    for oid in revwalk.skip(offset).take(limit) {
         let oid = oid?;
         let commit = repo.find_commit(oid)?;
 
